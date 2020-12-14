@@ -5,7 +5,6 @@ ammp_sample_grid <-
     # Provide a site name for folder creation and map labeling, if there
     # is a formal identification for the site in a provincial registry,
     # use that instead of a colloquial name
-    
     site_name,
     # province site is located in, only used to speed up geospatial
     # activities. e.g. 'N.B.' or 'N.S.'
@@ -20,7 +19,10 @@ ammp_sample_grid <-
     # choose whether or not to download coastline file from Stats Canada,
     # choose FALSE if you have already downloaded and have the shapefile
     # saves as `coastlines` in your R environment)
-    dl_coastline = TRUE)  {
+    dl_coastline = TRUE,
+    # output extension (haven't tried extensively, should work with 'shp',
+    # 'kml')
+    output_type = "shp") {
     library(tidyverse)
     library(sf)
     if (dl_coastline == TRUE) {
@@ -42,7 +44,8 @@ ammp_sample_grid <-
       st_transform(crs = crs_grid)
     
     lease_boundary <- st_read(file) %>%
-      st_transform(crs = crs_grid)
+      st_transform(crs = crs_grid) %>%
+      st_zm()
     
     lease_200m <- st_buffer(lease_boundary, dist = 200) %>%
       st_difference(province) %>%
@@ -181,25 +184,48 @@ ammp_sample_grid <-
         site_name,
         "/",
         site_name,
-        "_sample_sites.shp"
-      )
+        "_sample_sites.",
+        output_type
+      ),
+      delete_layer = TRUE
     )
-    st_write(lease_200m,
-             paste0(
-               "data/output/",
-               site_name,
-               "/",
-               site_name,
-               "_200m_buffer.shp"
-             ))
-    st_write(lease_500m,
-             paste0(
-               "data/output/",
-               site_name,
-               "/",
-               site_name,
-               "_500m_buffer.shp"
-             ))
+    
+    st_write(
+      sample_sites,
+      paste0(
+        "data/output/",
+        site_name,
+        "/",
+        site_name,
+        "_sample_sites.csv"
+      ),
+      layer_options = "GEOMETRY=AS_XY"
+    )
+    
+    st_write(
+      lease_200m,
+      paste0(
+        "data/output/",
+        site_name,
+        "/",
+        site_name,
+        "_200m_buffer.",
+        output_type
+      ),
+      delete_layer = TRUE
+    )
+    st_write(
+      lease_500m,
+      paste0(
+        "data/output/",
+        site_name,
+        "/",
+        site_name,
+        "_500m_buffer.",
+        output_type
+      ),
+      delete_layer = TRUE
+    )
     st_write(
       lease_1000m,
       paste0(
@@ -207,8 +233,10 @@ ammp_sample_grid <-
         site_name,
         "/",
         site_name,
-        "_1000m_buffer.shp"
-      )
+        "_1000m_buffer.",
+        output_type
+      ),
+      delete_layer = TRUE
     )
     st_write(
       lease_1500m,
@@ -217,7 +245,9 @@ ammp_sample_grid <-
         site_name,
         "/",
         site_name,
-        "_1500m_buffer.shp"
-      )
+        "_1500m_buffer.",
+        output_type
+      ),
+      delete_layer = TRUE
     )
   }
