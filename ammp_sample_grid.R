@@ -51,6 +51,9 @@ ammp_sample_grid <-
         temp
       )
       coastlines <- st_read(unzip(temp, exdir = "data/input")[3])
+      message(
+        "Next time you rune this function, try setting `dl_coastline = FALSE` so you don't download the coastline file again!"
+      )
     } else {
       message("Using user provided coastline shapefile found in the data/coastline folder.")
       coastlines <-
