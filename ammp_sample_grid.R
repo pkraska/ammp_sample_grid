@@ -25,13 +25,32 @@ ammp_sample_grid <-
     output_type = "shp") {
     library(tidyverse)
     library(sf)
+    
+    # Check if data/output and data/input folders are created, and create them if necessary
+    if (!dir.exists(paste0("data/output/", site_name, "/"))) {
+      message(
+        paste0(
+          "Creating directory for script out puts at in 'data/output/",
+          site_name,
+          "/'"
+        )
+      )
+      dir.create(paste0("data/output/", site_name, "/"), recursive = TRUE)
+    }
+    
+    if (!dir.exists("data/input/")) {
+      message("Creating directory for script out puts at in 'data/input/")
+      
+      dir.create("data/input/", recursive = TRUE)
+    }
+    
     if (dl_coastline == TRUE) {
       temp <- tempfile()
       download.file(
         "http://www12.statcan.gc.ca/census-recensement/2011/geo/bound-limit/files-fichiers/2016/lpr_000b16a_e.zip",
         temp
       )
-      coastlines <- st_read(unzip(temp)[3])
+      coastlines <- st_read(unzip(temp, exdir = "data/input")[3])
     } else {
       message("Using user provided coastline shapefile found in the data/coastline folder.")
       coastlines <-
@@ -96,6 +115,8 @@ ammp_sample_grid <-
     # points in the polygon. Other options are random points, hexagonal, and
     # triangular.
     
+    set.seed(0)
+    
     x <- 0
     while (x != 10L) {
       lease_200m_sample <- lease_200m %>%
@@ -153,10 +174,10 @@ ammp_sample_grid <-
       geom_sf(data = lease_500m_sample, col = 'blue') +
       geom_sf(data = lease_1000m_sample, col = 'green') +
       geom_sf(data = lease_1500m_sample, col = 'orange') +
-      geom_sf(data = lease_boundary, col = 'black', fill = 'red')
-    coord_sf(expand = FALSE)
+      geom_sf(data = lease_boundary, col = 'black', fill = 'red') +
+      coord_sf(expand = FALSE)
     # print the sample site plan in R
-    ammp_sample_sites
+    print(ammp_sample_sites)
     
     sample_sites <-
       bind_rows(lease_200m_sample,
@@ -166,6 +187,7 @@ ammp_sample_grid <-
     
     # save the sample sites in "data/output/[site name]/[site
     # name]_sample_sites.shp
+    
     if (!dir.exists(paste0("data/output/", site_name, "/"))) {
       message(
         paste0(
@@ -174,7 +196,7 @@ ammp_sample_grid <-
           "/'"
         )
       )
-      dir.create(paste0("data/output/", site_name, "/"))
+      dir.create(paste0("data/output/", site_name, "/"), recursive = TRUE)
     }
     
     st_write(
@@ -199,7 +221,8 @@ ammp_sample_grid <-
         site_name,
         "_sample_sites.csv"
       ),
-      layer_options = "GEOMETRY=AS_XY"
+      layer_options = "GEOMETRY=AS_XY",
+      append = FALSE
     )
     
     st_write(
